@@ -6,61 +6,41 @@ require 'koneksi.php';
 function totalDataTraining()
 {
    global $con;
-   $query = "SELECT count(*) FROM mahasiswa";
-   return (int) mysqli_fetch_row(mysqli_query($con, $query))[0];
+   return (int) mysqli_fetch_row(mysqli_query($con, "SELECT count(*) FROM mahasiswa"))[0];
 }
 
-echo totalDataTraining();
 // hitung  jumlah total data mahasiswa dengan status kelulusan = tepat
-function totalStatusKelulusanTepat()
+function totalStatusKelulusan()
 {
    global $con;
-   $query = "SELECT count(*) FROM mahasiswa WHERE status_kelulusan = 'tepat'";
-   $result = mysqli_query($con, $query);
-   return (int) mysqli_fetch_row($result)[0];
+   $query = "SELECT count(*) FROM mahasiswa WHERE status_kelulusan=";
+
+   $data['tepat']       = (int) mysqli_fetch_row(mysqli_query($con, $query . "'tepat'"))[0];
+   $data['terlambat']   = (int) mysqli_fetch_row(mysqli_query($con, $query . "'terlambat'"))[0];
+   return $data;
 }
 
-// hitung  jumlah total data mahasiswa dengan status kelulusan = terlambat
-function totalStatusKelulusanTerlambat()
-{
-   global $con;
-   $result = mysqli_query($con, "SELECT count(*) FROM mahasiswa WHERE status_kelulusan = 'terlambat'");
-   return (int) mysqli_fetch_row($result)[0];
-}
 
-// hitung prior probability
-
-// priorProbability status kelulusan = tepat
-function priorStatusKelulusanTepat()
+function priorStatusKelulusan()
 {
-   $hasil = totalStatusKelulusanTepat() / totalDataTraining();
+   $hasil['tepat'] = totalStatusKelulusan()['tepat'] / totalDataTraining();
+   $hasil['terlambat'] = totalStatusKelulusan()['terlambat'] / totalDataTraining();
    return $hasil;
 }
+
 
 // priorProbability status kelulusan = terlambat
-function priorStatusKelulusanTerlambat()
-{
-   $hasil = totalStatusKelulusanTerlambat() / totalDataTraining();
-   return $hasil;
-}
+
 
 // tahap 2
-function hitungConditional($key, $value)
+function hitungConditionalProbability($key, $value)
 {
-   $hasil = [];
    global $con;
    $query = "SELECT COUNT($key) FROM mahasiswa WHERE $key = '$value' AND status_kelulusan";
-   for ($i = 0; $i < 2; $i++) {
-      if ($i == 0) {
-         $data = mysqli_query($con, $query .= "='tepat'");
-         $jumlahData = mysqli_fetch_row($data)[0];
-         $hasil['tepat'] = (int) $jumlahData / totalStatusKelulusanTepat();
-      } else {
-         $data = mysqli_query($con, $query .= "='terlambat'");
-         $jumlahData = mysqli_fetch_row($data)[0];
-         $hasil['terlambat'] = (int) $jumlahData / totalStatusKelulusanTerlambat();
-      }
-   }
+
+   $hasil['tepat'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "='tepat'"))[0] / totalStatusKelulusan()['tepat'];
+   $hasil['terlambat'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "='terlambat'"))[0] / totalStatusKelulusan()['terlambat'];
+
    return $hasil;
 }
 
@@ -68,12 +48,12 @@ function hitungConditional($key, $value)
 // Tahap 3
 function prediksiNaiveBayes($data)
 {
-   $hasil['jenis_kelamin'] = hitungConditional('jenis_kelamin', $data['jenis_kelamin']);
-   $hasil['status_mahasiswa'] = hitungConditional('status_mahasiswa', $data['status_mahasiswa']);
-   $hasil['status_pernikahan'] = hitungConditional('status_pernikahan', $data['status_pernikahan']);
-   $hasil['ipk_semester'] = hitungConditional('ipk_semester', $data['ipk_semester']);
-   $nilaiTepat = $hasil['jenis_kelamin']['tepat'] * $hasil['status_mahasiswa']['tepat'] * $hasil['status_pernikahan']['tepat'] * $hasil['ipk_semester']['tepat'] * priorStatusKelulusanTepat();
-   $nilaiTerlambat = $hasil['jenis_kelamin']['terlambat'] * $hasil['status_mahasiswa']['terlambat'] * $hasil['status_pernikahan']['terlambat'] * $hasil['ipk_semester']['terlambat'] * priorStatusKelulusanTerlambat();
+   $hasil['jenis_kelamin'] = hitungConditionalProbability('jenis_kelamin', $data['jenis_kelamin']);
+   $hasil['status_mahasiswa'] = hitungConditionalProbability('status_mahasiswa', $data['status_mahasiswa']);
+   $hasil['status_pernikahan'] = hitungConditionalProbability('status_pernikahan', $data['status_pernikahan']);
+   $hasil['ipk_semester'] = hitungConditionalProbability('ipk_semester', $data['ipk_semester']);
+   $nilaiTepat = $hasil['jenis_kelamin']['tepat'] * $hasil['status_mahasiswa']['tepat'] * $hasil['status_pernikahan']['tepat'] * $hasil['ipk_semester']['tepat'] * priorStatusKelulusan()['tepat'];
+   $nilaiTerlambat = $hasil['jenis_kelamin']['terlambat'] * $hasil['status_mahasiswa']['terlambat'] * $hasil['status_pernikahan']['terlambat'] * $hasil['ipk_semester']['terlambat'] * priorStatusKelulusan()['terlambat'];
 
    if ($nilaiTepat > $nilaiTerlambat) {
       return 'TEPAT';
