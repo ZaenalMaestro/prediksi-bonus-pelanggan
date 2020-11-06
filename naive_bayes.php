@@ -6,58 +6,53 @@ require 'koneksi.php';
 function totalDataTraining()
 {
    global $con;
-   return (int) mysqli_fetch_row(mysqli_query($con, "SELECT count(*) FROM mahasiswa"))[0];
+   return (int) mysqli_fetch_row(mysqli_query($con, "SELECT count(*) FROM pelanggan"))[0];
 }
 
-// hitung  jumlah total data mahasiswa dengan status kelulusan = tepat
-function totalStatusKelulusan()
+// hitung  jumlah total data pelanggan dengan bonus ya dan bonus tidak
+function jumlahDataKelas()
 {
    global $con;
-   $query = "SELECT count(*) FROM mahasiswa WHERE status_kelulusan=";
+   $query = "SELECT count(*) FROM pelanggan WHERE bonus=";
 
-   $data['tepat']       = (int) mysqli_fetch_row(mysqli_query($con, $query . "'tepat'"))[0];
-   $data['terlambat']   = (int) mysqli_fetch_row(mysqli_query($con, $query . "'terlambat'"))[0];
-   return $data;
+   $jumlahDataBonus['ya']       = (int) mysqli_fetch_row(mysqli_query($con, $query . "'ya'"))[0];
+   $jumlahDataBonus['tidak']   = (int) mysqli_fetch_row(mysqli_query($con, $query . "'tidak'"))[0];
+   return $jumlahDataBonus;
 }
 
 
-function priorStatusKelulusan()
+function priorProbability()
 {
-   $hasil['tepat'] = totalStatusKelulusan()['tepat'] / totalDataTraining();
-   $hasil['terlambat'] = totalStatusKelulusan()['terlambat'] / totalDataTraining();
-   return $hasil;
+   $kelas['ya'] = jumlahDataKelas()['ya'] / totalDataTraining();
+   $kelas['tidak'] = jumlahDataKelas()['tidak'] / totalDataTraining();
+   return $kelas;
 }
-
-
-// priorProbability status kelulusan = terlambat
-
 
 // tahap 2
-function hitungConditionalProbability($key, $value)
+function conditionalProbability($nama_kolom, $nilai)
 {
    global $con;
-   $query = "SELECT COUNT($key) FROM mahasiswa WHERE $key = '$value' AND status_kelulusan";
+   $query = "SELECT COUNT($nama_kolom) FROM pelanggan WHERE $nama_kolom = '$nilai' AND bonus=";
 
-   $hasil['tepat'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "='tepat'"))[0] / totalStatusKelulusan()['tepat'];
-   $hasil['terlambat'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "='terlambat'"))[0] / totalStatusKelulusan()['terlambat'];
+   $conditionalProbability['ya'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "'ya'"))[0] / jumlahDataKelas()['ya'];
+   $conditionalProbability['tidak'] = (int) mysqli_fetch_row(mysqli_query($con, $query . "'tidak'"))[0] / jumlahDataKelas()['tidak'];
 
-   return $hasil;
+   return $conditionalProbability;
 }
 
-
 // Tahap 3
-function prediksiNaiveBayes($data)
+function posteriorProbability($data)
 {
-   $hasil['jenis_kelamin'] = hitungConditionalProbability('jenis_kelamin', $data['jenis_kelamin']);
-   $hasil['status_mahasiswa'] = hitungConditionalProbability('status_mahasiswa', $data['status_mahasiswa']);
-   $hasil['status_pernikahan'] = hitungConditionalProbability('status_pernikahan', $data['status_pernikahan']);
-   $hasil['ipk_semester'] = hitungConditionalProbability('ipk_semester', $data['ipk_semester']);
-   $nilaiTepat = $hasil['jenis_kelamin']['tepat'] * $hasil['status_mahasiswa']['tepat'] * $hasil['status_pernikahan']['tepat'] * $hasil['ipk_semester']['tepat'] * priorStatusKelulusan()['tepat'];
-   $nilaiTerlambat = $hasil['jenis_kelamin']['terlambat'] * $hasil['status_mahasiswa']['terlambat'] * $hasil['status_pernikahan']['terlambat'] * $hasil['ipk_semester']['terlambat'] * priorStatusKelulusan()['terlambat'];
+   $atribut['kartu'] = conditionalProbability('kartu', $data['kartu']);
+   $atribut['panggilan'] = conditionalProbability('panggilan', $data['panggilan']);
+   $atribut['blok'] = conditionalProbability('blok', $data['blok']);
 
-   if ($nilaiTepat > $nilaiTerlambat) {
-      return 'TEPAT';
-   } else if ($nilaiTepat < $nilaiTerlambat) {
-      return 'TERLAMBAT';
+   $probabilitas['ya'] = $atribut['kartu']['ya'] * $atribut['panggilan']['ya'] * $atribut['blok']['ya'] * priorProbability()['ya'];
+   $probabilitas['tidak'] = $atribut['kartu']['tidak'] * $atribut['panggilan']['tidak'] * $atribut['blok']['tidak'] * priorProbability()['tidak'];
+
+   if ($probabilitas['ya'] > $probabilitas['tidak']) {
+      return 'YA';
+   } else if ($probabilitas['ya'] < $probabilitas['tidak']) {
+      return 'TIDAK';
    }
 }

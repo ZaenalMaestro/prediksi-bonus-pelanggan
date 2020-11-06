@@ -3,12 +3,11 @@ require 'naive_bayes.php';
 $hasilPrediksi = '';
 if (isset($_POST['submit'])) {
    $data = [
-      "jenis_kelamin" => $_POST['jenis_kelamin'],
-      "status_mahasiswa" => $_POST['status_mahasiswa'],
-      "status_pernikahan" => $_POST['status_pernikahan'],
-      "ipk_semester" => $_POST['ipk_semester'],
+      "kartu" => $_POST['kartu'],
+      "panggilan" => $_POST['panggilan'],
+      "blok" => $_POST['blok'],
    ];
-   $hasilPrediksi = prediksiNaiveBayes($data);
+   $hasilPrediksi = posteriorProbability($data);
 }
 ?>
 <!DOCTYPE html>
@@ -18,48 +17,55 @@ if (isset($_POST['submit'])) {
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-   <title>Prediksi Status Kelulusan</title>
+   <style>
+   input, select{
+      display: block;
+   }
+   </style>
+   <title>Penentuan Bonus Pelanggan Dengan Naive Bayes</title>
 </head>
 
 <body>
    <!-- judul -->
-   <h1>Prediksi Status Kelulusan</h1>
+   <h1>Penentuan Bonus Pelanggan</h1>
    <!-- form input -->
    <form action="" method="post">
-      <!-- input jenis kelamin -->
-      <label for="jenis-kelamin">jenis kelamin</label>
-      <select name="jenis_kelamin" id="jenis-kelamin">
-         <option></option>
-         <option value="laki-laki">laki-laki</option>
-         <option value="perempuan">perempuan</option>
-      </select><br>
+      <!-- input pelanggan -->
+      <label for="pelanggan">nama pelanggan</label>
+      <input type="text" name="pelanggan" id="pelanggan">
 
-      <!-- input status mahasiswa-->
-      <label for="status-mahasiswa">status mahasiswa</label>
-      <select name="status_mahasiswa" id="status-mahasiswa">
+      <!-- pilih kartu-->
+      <label for="kartu">Kartu</label>
+      <select name="kartu" id="kartu">
          <option></option>
-         <option value="bekerja">bekerja</option>
-         <option value="mahasiswa">mahasiswa</option>
-      </select><br>
+         <option value="prabayar">prabayar</option>
+         <option value="pascabayar">pascabayar</option>
+      </select>
 
-      <!-- input status pernikahan-->
-      <label for="status-pernikahan">status pernikahan</label>
-      <select name="status_pernikahan" id="status-pernikahan">
+      <!-- pilih panggilan-->
+      <label for="panggilan">panggilan</label>
+      <select name="panggilan" id="panggilan">
          <option></option>
-         <option value="menikah">menikah</option>
-         <option value="belum">belum</option>
-      </select><br>
+         <option value="sedikit">sedikit</option>
+         <option value="cukup">cukup</option>
+         <option value="banyak">banyak</option>
+      </select>
 
-      <!-- input ipk semester -->
-      <label for="ipk-semester">IPK semester</label>
-      <input type="text" name="ipk_semester" required><br>
+      <!-- pilih blok-->
+      <label for="blok">blok</label>
+      <select name="blok" id="blok">
+         <option></option>
+         <option value="rendah">rendah</option>
+         <option value="sedang">sedang</option>
+         <option value="tinggi">tinggi</option>
+      </select>
 
       <!-- tombol submit -->
       <button type="submit" name="submit">PREDIKSI</button>
    </form>
 
    <!-- hasil -->
-   <h5>Hasil Prediksi : <?= $hasilPrediksi ?></h5>
+   <h5>BONUS : <?= $hasilPrediksi ?></h5>
 </body>
 
 </html>

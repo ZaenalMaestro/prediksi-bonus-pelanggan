@@ -1,2 +1,2 @@
 <?php
-$con = mysqli_connect('localhost', 'root', '', 'universitas');
+$con = mysqli_connect('localhost', 'root', '', 'data_training');
