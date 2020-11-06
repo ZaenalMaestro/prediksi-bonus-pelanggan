@@ -6,18 +6,18 @@ require 'koneksi.php';
 function totalDataTraining()
 {
    global $con;
-   $result = mysqli_query($con, "SELECT count(*) FROM mahasiswa");
-   $totalDataTraining =  mysqli_fetch_row($result);
-   return (int) $totalDataTraining[0];
+   $query = "SELECT count(*) FROM mahasiswa";
+   return (int) mysqli_fetch_row(mysqli_query($con, $query))[0];
 }
 
+echo totalDataTraining();
 // hitung  jumlah total data mahasiswa dengan status kelulusan = tepat
 function totalStatusKelulusanTepat()
 {
    global $con;
-   $result = mysqli_query($con, "SELECT count(*) FROM mahasiswa WHERE status_kelulusan = 'tepat'");
-   $totalData =  mysqli_fetch_row($result);
-   return (int) $totalData[0];
+   $query = "SELECT count(*) FROM mahasiswa WHERE status_kelulusan = 'tepat'";
+   $result = mysqli_query($con, $query);
+   return (int) mysqli_fetch_row($result)[0];
 }
 
 // hitung  jumlah total data mahasiswa dengan status kelulusan = terlambat
@@ -25,8 +25,7 @@ function totalStatusKelulusanTerlambat()
 {
    global $con;
    $result = mysqli_query($con, "SELECT count(*) FROM mahasiswa WHERE status_kelulusan = 'terlambat'");
-   $totalData =  mysqli_fetch_row($result);
-   return (int) $totalData[0];
+   return (int) mysqli_fetch_row($result)[0];
 }
 
 // hitung prior probability
@@ -54,12 +53,12 @@ function hitungConditional($key, $value)
    for ($i = 0; $i < 2; $i++) {
       if ($i == 0) {
          $data = mysqli_query($con, $query .= "='tepat'");
-         $jumlahData = mysqli_fetch_row($data)[0];         
-         $hasil['tepat'] = (int)$jumlahData / totalStatusKelulusanTepat();
-      }else {
+         $jumlahData = mysqli_fetch_row($data)[0];
+         $hasil['tepat'] = (int) $jumlahData / totalStatusKelulusanTepat();
+      } else {
          $data = mysqli_query($con, $query .= "='terlambat'");
          $jumlahData = mysqli_fetch_row($data)[0];
-         $hasil['terlambat'] = (int) $jumlahData / totalStatusKelulusanTerlambat();;
+         $hasil['terlambat'] = (int) $jumlahData / totalStatusKelulusanTerlambat();
       }
    }
    return $hasil;
@@ -67,7 +66,8 @@ function hitungConditional($key, $value)
 
 
 // Tahap 3
-function prediksiNaiveBayes($data){
+function prediksiNaiveBayes($data)
+{
    $hasil['jenis_kelamin'] = hitungConditional('jenis_kelamin', $data['jenis_kelamin']);
    $hasil['status_mahasiswa'] = hitungConditional('status_mahasiswa', $data['status_mahasiswa']);
    $hasil['status_pernikahan'] = hitungConditional('status_pernikahan', $data['status_pernikahan']);
