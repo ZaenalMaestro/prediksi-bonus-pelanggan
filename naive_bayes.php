@@ -2,14 +2,14 @@
 
 require 'koneksi.php';
 
-// hitung semua jumlah total data mahasiswa
+// hitung semua jumlah total data training
 function totalDataTraining()
 {
    global $con;
    return (int) mysqli_fetch_row(mysqli_query($con, "SELECT count(*) FROM pelanggan"))[0];
 }
 
-// hitung  jumlah total data pelanggan dengan bonus ya dan bonus tidak
+// hitung  jumlah data kelas bonus=ya dan kelas benus=tidak
 function jumlahDataKelas()
 {
    global $con;
@@ -20,7 +20,7 @@ function jumlahDataKelas()
    return $jumlahDataBonus;
 }
 
-
+// 1. hitung nilai prior probability
 function priorProbability()
 {
    $kelas['ya'] = jumlahDataKelas()['ya'] / totalDataTraining();
@@ -28,7 +28,7 @@ function priorProbability()
    return $kelas;
 }
 
-// tahap 2
+// 2. Hitung conditional probablity
 function conditionalProbability($nama_kolom, $nilai)
 {
    global $con;
@@ -40,7 +40,7 @@ function conditionalProbability($nama_kolom, $nilai)
    return $conditionalProbability;
 }
 
-// Tahap 3
+// hitung poseterior probability
 function posteriorProbability($data)
 {
    $atribut['kartu'] = conditionalProbability('kartu', $data['kartu']);
